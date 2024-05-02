@@ -3,7 +3,7 @@ package controls.board;
 import java.util.*;
 
 public abstract class BoardCell {
-	protected ArrayList<Stone> stonesInCell;
+	protected ArrayList<Stone> stonesInCell = new ArrayList<Stone>();
 	
 	public ArrayList<Stone> getStonesInCell() {
 		return this.stonesInCell;
