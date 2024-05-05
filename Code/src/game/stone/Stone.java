@@ -1,4 +1,4 @@
-package controls.board;
+package game.stone;
 
 public abstract class Stone {
 	protected int value;

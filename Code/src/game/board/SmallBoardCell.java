@@ -1,12 +1,15 @@
-package controls.board;
+package game.board;
 
 import java.util.ArrayList;
+
+import game.stone.SmallStone;
+import game.stone.Stone;
 
 public class SmallBoardCell extends BoardCell {
     	public SmallBoardCell() {
             stonesInCell = new ArrayList<Stone>();
             for(int i=0; i<5; i++) {
-                this.stonesInCell.add(new SmallGem());
+                this.stonesInCell.add(new SmallStone());
 	    }
     }
 }

@@ -1,7 +1,7 @@
-package controls;
+package game;
 
-import controls.board.*;
-import controls.player.Player;
+import game.board.*;
+import game.player.Player;
 
 public class Game {
 	private Board myBoard;
@@ -19,9 +19,9 @@ public class Game {
 	}
 	
 	public void restart() {
-		myBoard.reset();;
-		player1.reset();;
-		player2.reset();;
+		myBoard.reset();
+		player1.reset();
+		player2.reset();
 		isP1Turn = false;
 		waitMove = true;
 	}

@@ -1,6 +1,8 @@
-package controls.board;
+package game.board;
 
 import java.util.*;
+
+import game.stone.Stone;
 
 public abstract class BoardCell {
 	protected ArrayList<Stone> stonesInCell = new ArrayList<Stone>();

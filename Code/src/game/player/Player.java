@@ -1,17 +1,18 @@
-package controls.player;
+package game.player;
 
 import java.util.*;
 import java.util.concurrent.*;
 import java.lang.Math;
 
-import controls.board.*;
-import controls.board.Stone;
+import game.board.*;
+import game.stone.SmallStone;
+import game.stone.Stone;
 
 public class Player {
 	private ArrayList<Stone> inHand;
 	private ArrayList<Stone> taken;
 	private int playerId;
-	private int dir;
+	private int direction;
 	private int curIndex;
 	private int penalty;
 	
@@ -19,7 +20,7 @@ public class Player {
 		this.inHand = new ArrayList<Stone>();
 		this.taken = new ArrayList<Stone>();
 		this.playerId = id;
-		this.dir = -1;
+		this.direction = -1;
 		this.curIndex = -1;
 		this.penalty = 0;
 	}
@@ -33,8 +34,8 @@ public class Player {
 	
 	public void makeMove(Board b) {
 		if(isTurn()) {
-			int nextIndex = Math.floorMod(this.curIndex+dir, 12);
-			int afterIndex = Math.floorMod(this.curIndex+2*dir, 12);
+			int nextIndex = Math.floorMod(this.curIndex+direction, 12);
+			int afterIndex = Math.floorMod(this.curIndex+2*direction, 12);
 			BoardCell cur = b.getCells()[curIndex];
 			BoardCell next = b.getCells()[nextIndex];
 			BoardCell after = b.getCells()[afterIndex];
@@ -53,10 +54,10 @@ public class Player {
 					break;	
 				}
 			case 2:
-				takeStonesInNext(next, mc==2);
+				takeStonesInNext(next, true);
 				break;
 			case 3:
-				takeStonesInNext(next, mc==2);
+				takeStonesInNext(next, false);
 				break;
 			case 4:
 				this.curIndex = -1;
@@ -78,12 +79,12 @@ public class Player {
 	public void raiSoi(Board b) {
 		if(playerId == 1) {
 			for(int i=0; i<5; i++) {
-				b.getCells()[i].getStonesInCell().add(new SmallGem());
+				b.getCells()[i].getStonesInCell().add(new SmallStone());
 			}
 		}
 		if(playerId == 2) {
 			for(int i=6; i<11; i++) {
-				b.getCells()[i].getStonesInCell().add(new SmallGem());
+				b.getCells()[i].getStonesInCell().add(new SmallStone());
 			}
 		}
 		this.penalty ++;
@@ -97,7 +98,7 @@ public class Player {
 		ArrayList<Stone> cur = bc.getStonesInCell();
 		this.inHand.addAll(cur);
 		cur.clear();
-		this.curIndex = Math.floorMod((curIndex+dir), 12);
+		this.curIndex = Math.floorMod((curIndex+direction), 12);
 	}
 
 	public void releaseStone(BoardCell bc) {
@@ -107,7 +108,7 @@ public class Player {
 			cur.add(this.inHand.get(this.inHand.size()-1));
 			this.inHand.remove(this.inHand.size()-1);
 			//System.out.println(this.inHand.size());
-			this.curIndex = Math.floorMod(this.curIndex+dir, 12);
+			this.curIndex = Math.floorMod(this.curIndex+direction, 12);
 		}
 	}
 	
@@ -119,7 +120,7 @@ public class Player {
 			this.curIndex = -1;
 		}
 		else {
-			this.curIndex = Math.floorMod(this.curIndex+2*dir, 12);
+			this.curIndex = Math.floorMod(this.curIndex+2*direction, 12);
 		}
 	}
 	
@@ -165,8 +166,8 @@ public class Player {
 		this.curIndex = curIndex;
 	}
 	
-	public void setDir(int dir) {
-		this.dir = dir;
+	public void setDir(int direction) {
+		this.direction = direction;
 	}
 	
 	public boolean isValidMove(int ci) {
@@ -189,7 +190,7 @@ public class Player {
 	public void moveSetup(int ci, int d) {
 		if(isValidMove(ci)) {
 			this.curIndex = ci;
-			this.dir = d;
+			this.direction = d;
 		}
 	}
 	

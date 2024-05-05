@@ -1,4 +1,4 @@
-package controls.board;
+package game.board;
 
 public class Board {
 	private BoardCell[] cells;
