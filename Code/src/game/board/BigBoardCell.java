@@ -6,8 +6,9 @@ import game.stone.BigStone;
 import game.stone.Stone;
 
 public class BigBoardCell extends BoardCell {
-    	public BigBoardCell() {
-		    stonesInCell = new ArrayList<Stone>();
-		    this.stonesInCell.add(new BigStone());
+	// Constructor
+	public BigBoardCell() {
+	    stonesInCell = new ArrayList<Stone>();
+	    stonesInCell.add(new BigStone()); // Add one big stone
 	}
 }

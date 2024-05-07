@@ -1,7 +1,8 @@
 package game.stone;
 
 public class SmallStone extends Stone {
+    // Constructor
     public SmallStone() {
-        this.value = 1;
+        value = 1;
     }
 }
