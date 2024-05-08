@@ -35,6 +35,12 @@ public class Player {
 	public void makeMove(Board b) {
 		// Check if currently in a turn
 		if(inTurn()) {
+			// Add a short delay for better visualization (optional)
+			try {
+				TimeUnit.MILLISECONDS.sleep(500);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			// Calculate next and after indexes
 			int nextIndex = Math.floorMod(curIndex+direction, 12);
 			int afterIndex = Math.floorMod(curIndex+2*direction, 12);
@@ -75,13 +81,6 @@ public class Player {
 				return;
 			}
 		}
-		// Add a short delay for better visualization (optional)
-		//try {
-		//	TimeUnit.MILLISECONDS.sleep(500);
-		//}
-		//catch(Exception e) {
-		//	e.printStackTrace();
-		//}
 	}
 	
 	// Method to check if currently in a turn

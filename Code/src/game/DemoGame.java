@@ -70,6 +70,10 @@ public class DemoGame {
     }
 
     public static void displayWinner() {
+        // Display score
+        System.out.println("Player 1: " + game.getPlayer1().getPoint());
+        System.out.println("Player 2: " + game.getPlayer2().getPoint());
+        
         int winner = game.getWinner();
         if (winner == 1) {
             System.out.println("Player 1 wins!");
