@@ -1,18 +1,18 @@
 package test;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
 
 import game.*;
+
+import static org.junit.Assert.*;
 
 public class GameTest {
     
     @Test
     public void isValidMoveTest(){
         Game testgame = new Game();
-        assertEquals(true, testgame.isValidMove(0));
-        assertEquals(false, testgame.isValidMove(6));
+        assertTrue(testgame.isValidMove(0));
+        assertFalse(testgame.isValidMove(6));
     }
 
     @Test
@@ -31,7 +31,7 @@ public class GameTest {
         for(int i = 0; i < 5; i++){
             testgame.getBoard().getCells()[i].getStonesInCell().clear();
         }
-        assertEquals(true, testgame.outOfStone());
+        assertTrue(testgame.outOfStone());
         assertEquals(1, testgame.getPlayer1().getPenalty());
     }
 

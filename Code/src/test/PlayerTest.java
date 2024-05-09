@@ -1,18 +1,19 @@
 package test;
 
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import game.board.*;
 import game.player.*;
+
+import static org.junit.Assert.*;
 
 public class PlayerTest {
 
     @Test
     public void inTurnTest(){
         Player testPlayer = new Player();
-        assertEquals(false, testPlayer.inTurn());
+        assertFalse(testPlayer.inTurn());
         testPlayer.moveSetup(0, 0);
-        assertEquals(true, testPlayer.inTurn());
+        assertTrue(testPlayer.inTurn());
     }
 
     @Test 
