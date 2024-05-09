@@ -1,11 +1,12 @@
 package game;
 
+import game.stone.SmallStone;
+
 import java.util.Scanner;
 
 public class DemoGame {
     static Game game = new Game();
     public static void main(String[] args) {
-        // Create a new game instance
         Scanner scanner = new Scanner(System.in);
 
         displayBoard();

@@ -35,12 +35,6 @@ public class Player {
 	public void makeMove(Board b) {
 		// Check if currently in a turn
 		if(inTurn()) {
-			// Add a short delay for better visualization (optional)
-			try {
-				TimeUnit.MILLISECONDS.sleep(500);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 			// Calculate next and after indexes
 			int nextIndex = Math.floorMod(curIndex+direction, 12);
 			int afterIndex = Math.floorMod(curIndex+2*direction, 12);
@@ -49,12 +43,11 @@ public class Player {
 			BoardCell next = b.getCells()[nextIndex];
 			BoardCell after = b.getCells()[afterIndex];
 			// Release one stone to the current cell
-			if(inHand.size() > 0) {
+			if(!inHand.isEmpty()) {
 				releaseStone(cur);
-				return;
 			}
 			// Released all stones
-			if(inHand.size() == 0 && cur.getNumberOfStones()>0) {
+			else if(cur.getNumberOfStones()>0) {
 				// End up at a big cell -> end turn
 				if (cur instanceof BigBoardCell) {
 					curIndex = -1;
@@ -63,23 +56,25 @@ public class Player {
 				else {
 					pickupStones((SmallBoardCell)cur); // Pick up all stones in that cell
 				}
-				return;
 			}
 			// End up at an empty cell, next and after cells are not empty
-			if(inHand.size() == 0 && cur.getNumberOfStones() == 0 && next.getNumberOfStones() > 0 && after.getNumberOfStones()>0) {
+			else if(cur.getNumberOfStones() == 0 && next.getNumberOfStones() > 0 && after.getNumberOfStones()>0) {
 				takeStones(next, true); // Take all stones in next cell and end turn
-				return;
 			}
 			// End up at an empty cell, next cell is not empty, after cell is empty
-			if(inHand.size() == 0 && cur.getNumberOfStones() == 0 && next.getNumberOfStones() > 0 && after.getNumberOfStones()==0) {
+			else if(cur.getNumberOfStones() == 0 && next.getNumberOfStones() > 0 && after.getNumberOfStones()==0) {
 				takeStones(next, false);// Take all stones in next cell and continue
-				return;
 			}
 			// End up at an empty cell, next cell is empty -> end turn
-			if(inHand.size() == 0 && cur.getNumberOfStones() == 0 && next.getNumberOfStones() == 0) {
+			else if(cur.getNumberOfStones() == 0 && next.getNumberOfStones() == 0) {
 				curIndex = -1;
-				return;
 			}
+		}
+		// Add a short delay for better visualization (optional)
+		try {
+			TimeUnit.MILLISECONDS.sleep(500);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -98,10 +93,10 @@ public class Player {
 	
 	// Method to release a stone to a cell
 	public void releaseStone(BoardCell bc) {
-		if(inHand.size()>0) {
+		if(!inHand.isEmpty()) {
 			ArrayList<Stone> cur = bc.getStonesInCell();
-			cur.add(inHand.get(inHand.size()-1));
-			inHand.remove(inHand.size()-1);
+			cur.add(inHand.getLast());
+			inHand.removeLast();
 			curIndex = Math.floorMod(curIndex+direction, 12);
 		}
 	}

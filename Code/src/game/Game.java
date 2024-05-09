@@ -6,9 +6,9 @@ import game.stone.*;
 
 public class Game {
 	// Attributes declaration
-	private Board myBoard; // Represents the game board
-	private Player player1; // Represents player 1
-	private Player player2; // Represents player 2
+	private final Board myBoard; // Represents the game board
+	private final Player player1; // Represents player 1
+	private final Player player2; // Represents player 2
 	private boolean isP1Turn; // Indicates if it's player 1's turn
 	private boolean waitMove; // Indicates if the game is waiting for a move
 
@@ -18,7 +18,7 @@ public class Game {
 		myBoard = new Board();
 		player1 = new Player();
 		player2 = new Player();
-		isP1Turn = true; // Player 1 starts first
+		isP1Turn = true; // Player1 starts first
 		waitMove = true; // Game starts with waiting for a move
 	}
 
@@ -28,26 +28,27 @@ public class Game {
 		myBoard.reset();
 		player1.reset();
 		player2.reset();
-		isP1Turn = true; // Player 1 starts first
+		isP1Turn = true; // Player1 starts first
 		waitMove = true; // Game starts with waiting for a move
 	}
 
 	// Method to play the game
 	public void playGame() {
 		// Check if it's not waiting for a move and the game is not ended
-		if (!waitMove && !myBoard.gameEnd()) {
+		if(myBoard.gameEnd()) waitMove = true;
+		if (!waitMove) {
 			// Check whose turn it is and make a move accordingly
 			if (isP1Turn) {
 				player1.makeMove(myBoard);
 				// Check if the turn has end after the move
-				if (player1.inTurn() != isP1Turn) {
+				if (!player1.inTurn()) {
 					waitMove = true; // Wait for another move
 					isP1Turn = player1.inTurn(); // Update turn
 				}
 			} else {
 				player2.makeMove(myBoard);
 				// Check if the turn has end after the move
-				if (player2.inTurn() == isP1Turn) {
+				if (!player2.inTurn()) {
 					waitMove = true; // Wait for another move
 					isP1Turn = !player2.inTurn(); // Update turn
 				}
@@ -71,15 +72,10 @@ public class Game {
 	// Method to check if a move is valid
 	public boolean isValidMove(int index) {
 		// Check if it's player 1's turn and index is valid and there are stones in the cell and waiting for a move
-		if (isP1Turn && index < 5 && index >= 0 && myBoard.getCells()[index].getNumberOfStones() > 0 && waitMove) {
-			return true;
-		}
+		if (isP1Turn) return index < 5 && index >= 0 && myBoard.getCells()[index].getNumberOfStones() > 0 && waitMove;
 		// Check if it's player 2's turn and index is valid and there are stones in the cell and waiting for a move
-		if (!isP1Turn && index < 11 && index > 5 && myBoard.getCells()[index].getNumberOfStones() > 0 && waitMove) {
-			return true;
-		}
-		return false; // Otherwise, move is not valid
-	}
+        return index < 11 && index > 5 && myBoard.getCells()[index].getNumberOfStones() > 0 && waitMove;// Otherwise, move is not valid
+    }
 
 	// Method to check if stones are out
 	public boolean outOfStone() {
