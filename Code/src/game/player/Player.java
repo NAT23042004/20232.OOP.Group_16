@@ -17,16 +17,16 @@ public class Player {
 
 	// Constructor
 	public Player() {
-		inHand = new ArrayList<Stone>();
-		taken = new ArrayList<Stone>();
+		inHand = new ArrayList<>();
+		taken = new ArrayList<>();
 		direction = 0;
 		curIndex = -1;
 	}
 	
 	// Method to reset player attributes
 	public void reset() {
-		inHand = new ArrayList<Stone>();
-		taken = new ArrayList<Stone>();
+		inHand = new ArrayList<>();
+		taken = new ArrayList<>();
 		direction = 0;
 		curIndex = -1;
 	}

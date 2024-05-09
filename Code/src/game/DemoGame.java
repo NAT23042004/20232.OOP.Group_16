@@ -1,7 +1,5 @@
 package game;
 
-import game.stone.SmallStone;
-
 import java.util.Scanner;
 
 public class DemoGame {
