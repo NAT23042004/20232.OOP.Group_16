@@ -1,4 +1,4 @@
-## Project Description!
+## Project Description
 In this project, we have made an application for 2 users to play the traditional game Ô Ăn Quan.
 ## Team Members
 - Đỗ Khánh Nam - 20225988
