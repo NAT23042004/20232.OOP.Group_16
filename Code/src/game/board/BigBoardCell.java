@@ -1,14 +1,13 @@
 package game.board;
 
-import java.util.ArrayList;
-
 import game.stone.BigStone;
-import game.stone.Stone;
+
+import java.util.ArrayList;
 
 public class BigBoardCell extends BoardCell {
 	// Constructor
 	public BigBoardCell() {
-	    stonesInCell = new ArrayList<Stone>();
+	    stonesInCell = new ArrayList<>();
 	    stonesInCell.add(new BigStone()); // Add one big stone
 	}
 }

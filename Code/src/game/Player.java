@@ -1,11 +1,13 @@
-package game.player;
+package game;
 
-import java.util.*;
-import java.util.concurrent.*;
-import java.lang.Math;
+import game.board.BigBoardCell;
+import game.board.Board;
+import game.board.BoardCell;
+import game.board.SmallBoardCell;
+import game.stone.Stone;
 
-import game.board.*;
-import game.stone.*;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class Player {
 	// Attributes declaration
