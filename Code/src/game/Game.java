@@ -1,6 +1,7 @@
 package game;
 
 import game.board.*;
+import game.player.Player;
 import game.stone.*;
 
 public class Game {

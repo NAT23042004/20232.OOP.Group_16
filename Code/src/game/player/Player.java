@@ -1,4 +1,4 @@
-package game;
+package game.player;
 
 import game.board.BigBoardCell;
 import game.board.Board;
