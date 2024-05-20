@@ -2,7 +2,7 @@ package main.demo;
 
 import game.board.*;
 import game.player.Player;
-import game.stone.SmallStone;
+import javafx.animation.*;
 import javafx.animation.TranslateTransition;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -51,37 +51,36 @@ public class PlayScreenController implements Initializable{
 
 
     @FXML
-    private Pane cell01,cell02,cell03,cell04,cell05;
+    private Pane cell00,cell01,cell02,cell03,cell04;
 
     @FXML
     private Pane cell06,cell07,cell08,cell09,cell10;
+    @FXML
+    private Pane bigcell05, bigcell11;
 
     @FXML
-    private Button leftButtonCell01,leftButtonCell02,leftButtonCell03,leftButtonCell04,leftButtonCell05;
+    private Button leftButtonCell00, leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04;
 
     @FXML
-    private Button leftButtonCell06,leftButtonCell07,leftButtonCell08,leftButtonCell09,leftButtonCell10;
+    private Button leftButtonCell06, leftButtonCell07, leftButtonCell08, leftButtonCell09, leftButtonCell10;
 
     @FXML
-    private ImageView leftDirectionCell01,leftDirectionCell02,leftDirectionCell03,leftDirectionCell04,leftDirectionCell05;
+    private ImageView leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04;
 
     @FXML
-    private ImageView leftDirectionCell06,leftDirectionCell07,leftDirectionCell08,leftDirectionCell09,leftDirectionCell10;
+    private ImageView leftDirectionCell06, leftDirectionCell07, leftDirectionCell08, leftDirectionCell09, leftDirectionCell10;
 
     @FXML
     private Button mainwindow;
 
     @FXML
-    private Pane quan11,quan12;
+    private Button rightButtonCell00, rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04;
 
     @FXML
-    private Button rightButtonCell01,rightButtonCell02,rightButtonCell03,rightButtonCell04,rightButtonCell05;
+    private Button rightButtonCell06, rightButtonCell07, rightButtonCell08, rightButtonCell09, rightButtonCell10;
 
     @FXML
-    private Button rightButtonCell06,rightButtonCell07,rightButtonCell08,rightButtonCell09,rightButtonCell10;
-
-    @FXML
-    private ImageView rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04, rightDirectionCell05;
+    private ImageView rightDirectionCell00, rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04;
 
     @FXML
     private ImageView rightDirectionCell06, rightDirectionCell07,rightDirectionCell08, rightDirectionCell09, rightDirectionCell10;
@@ -90,13 +89,15 @@ public class PlayScreenController implements Initializable{
     private Label Player1Score, Player2Score;
 
     @FXML
+    private Label CellNum00, CellNum01, CellNum02, CellNum03, CellNum04 , CellNum06, CellNum07, CellNum08, CellNum09, CellNum10;
+
+    @FXML
+    private Label bigcellNum05, bigcellNum11;
+    @FXML
     private Pane Player1bag, Player2bag;
 
     @FXML
-    private ImageView bigstone02;
-
-    @FXML
-    private ImageView bigstone01;
+    private ImageView big01, big02 ;
 
     private File file;
     @FXML
@@ -146,14 +147,14 @@ public class PlayScreenController implements Initializable{
     public void initialize(URL url, ResourceBundle resourceBundle) {
             isP1Turn = true;
             isWaitMove = true;
-            for(Pane pane : Arrays.asList(cell01, cell02, cell03, cell04, cell05)) {
+            for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
                 pane.setDisable(false);
             }
             for(Pane pane : Arrays.asList(cell07, cell08, cell09, cell10, cell06)) {
                 pane.setDisable(true);
             }
 
-            file = new File("C:\\Users\\Admin\\OOP Lab\\Intellij Test\\demo\\src\\main\\resources\\main\\demo\\music\\gameMusic.mp3");
+            file = new File("C:\\Users\\Admin\\Git\\LocalRepo\\20232.OOP.Group_16\\Code\\demo\\src\\main\\resources\\main\\demo\\music\\gameMusic.mp3");
             this.media = new Media(file.toURI().toString());
             this.mediaPlayer = new MediaPlayer(this.media);
     }
@@ -185,16 +186,16 @@ public class PlayScreenController implements Initializable{
         System.out.println(index);
 
 
-        for(ImageView imageView : Arrays.asList(leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04, leftDirectionCell05,
+        for(ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
                 leftDirectionCell06, leftDirectionCell07, leftDirectionCell08, leftDirectionCell09, leftDirectionCell10,
-                rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04, rightDirectionCell05,
+                rightDirectionCell00, rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04,
                 rightDirectionCell06, rightDirectionCell07, rightDirectionCell08, rightDirectionCell09, rightDirectionCell10)) {
             imageView.setVisible(false);
         }
 
-        for(Button button : Arrays.asList(leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04, leftButtonCell05,
+        for(Button button : Arrays.asList(leftButtonCell00, leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04,
                 leftButtonCell06, leftButtonCell07, leftButtonCell08, leftButtonCell09, leftButtonCell10,
-                rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04, rightButtonCell05,
+                rightButtonCell00 ,rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04,
                 rightButtonCell06, rightButtonCell07, rightButtonCell08, rightButtonCell09, rightButtonCell10)) {
             button.setVisible(false);
         }
@@ -210,38 +211,39 @@ public class PlayScreenController implements Initializable{
         String id = paneChosen.getId();
         int index = Integer.parseInt(id.substring(id.length()-2));
 
+        // Move setup for current Player
         if (isP1Turn){
             this.currentPlayer = this.player1;
             currentPlayer.moveSetup(index, -1);
-            isWaitMove = false;
         }
         else {
             this.currentPlayer = this.player2;
-            currentPlayer.moveSetup(index, -1);
-            isWaitMove = false;
+            currentPlayer.moveSetup(index, 1);
         }
+        isWaitMove = false;
+
 
         while (!isWaitMove){
             playMove();
         }
 
         if (board.gameEnd()){
-            for(Pane pane : Arrays.asList(cell01, cell02, cell03, cell04, cell05, cell06, cell07, cell08, cell09, cell10)) {
+            for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10)) {
                 pane.setDisable(true);
             }
             // Display end game screen
         }
         else {
-            for(ImageView imageView : Arrays.asList(leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04, leftDirectionCell05,
+            for(ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
                     leftDirectionCell06, leftDirectionCell07, leftDirectionCell08, leftDirectionCell09, leftDirectionCell10,
-                    rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04, rightDirectionCell05,
+                    rightDirectionCell00, rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04,
                     rightDirectionCell06, rightDirectionCell07, rightDirectionCell08, rightDirectionCell09, rightDirectionCell10)) {
                 imageView.setVisible(false);
             }
 
-            for(Button button : Arrays.asList(leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04, leftButtonCell05,
+            for(Button button : Arrays.asList(leftButtonCell00, leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04,
                     leftButtonCell06, leftButtonCell07, leftButtonCell08, leftButtonCell09, leftButtonCell10,
-                    rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04, rightButtonCell05,
+                    rightButtonCell00, rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04,
                     rightButtonCell06, rightButtonCell07, rightButtonCell08, rightButtonCell09, rightButtonCell10)) {
                 button.setVisible(false);
             }
@@ -258,38 +260,41 @@ public class PlayScreenController implements Initializable{
         System.out.println("pane chosen: " + paneChosen);
         String id = paneChosen.getId();
         int index = Integer.parseInt(id.substring(id.length()-2));
+
+        // Move setup for current Player
         if (isP1Turn){
             this.currentPlayer = this.player1;
             currentPlayer.moveSetup(index, 1);
-            isWaitMove = false;
         }
         else {
             this.currentPlayer = this.player2;
-            currentPlayer.moveSetup(index, 1);
-            isWaitMove = false;
+            currentPlayer.moveSetup(index, -1);
+
         }
+        isWaitMove = false;
+
 
         while (!isWaitMove){
             playMove();
         }
 
         if (board.gameEnd()){
-            for(Pane pane : Arrays.asList(cell01, cell02, cell03, cell04, cell05, cell06, cell07, cell08, cell09, cell10)) {
+            for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10)) {
                 pane.setDisable(true);
             }
             // Display end game screen
         }
         else {
-            for(ImageView imageView : Arrays.asList(leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04, leftDirectionCell05,
+            for(ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
                     leftDirectionCell06, leftDirectionCell07, leftDirectionCell08, leftDirectionCell09, leftDirectionCell10,
-                    rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04, rightDirectionCell05,
+                    rightDirectionCell00, rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04,
                     rightDirectionCell06, rightDirectionCell07, rightDirectionCell08, rightDirectionCell09, rightDirectionCell10)) {
                 imageView.setVisible(false);
             }
 
-            for(Button button : Arrays.asList(leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04, leftButtonCell05,
+            for(Button button : Arrays.asList(leftButtonCell00, leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04,
                     leftButtonCell06, leftButtonCell07, leftButtonCell08, leftButtonCell09, leftButtonCell10,
-                    rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04, rightButtonCell05,
+                    rightButtonCell00, rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04,
                     rightButtonCell06, rightButtonCell07, rightButtonCell08, rightButtonCell09, rightButtonCell10)) {
                 button.setVisible(false);
             }
@@ -328,6 +333,7 @@ public class PlayScreenController implements Initializable{
                 // End up at a big cell -> end turn
                 if (cur instanceof BigBoardCell) {
                     player.moveSetup(-1, 0);
+                    setNumGems(board);
                     setScore();
                 }
                 // End up at a small cells -> continue
@@ -352,6 +358,7 @@ public class PlayScreenController implements Initializable{
                     moveStonetoPlayerbag(takenPane, Player2bag);    // Visual of taking stones
                 }
                 player.takeStones(next, true);// Take all stones in next cell and end turn
+                setNumGems(board);
                 setScore();
             }
             // End up at an empty cell, next cell is not empty, after cell is empty
@@ -368,15 +375,123 @@ public class PlayScreenController implements Initializable{
             // End up at an empty cell, next cell is empty -> end turn
             else if (cur.getNumberOfStones() == 0 && next.getNumberOfStones() == 0) {
                player.moveSetup(-1, 0);
-                setScore();
+               setNumGems(board);
+               setScore();
             }
         }
 
     }
+    // Method to release a stone
+
+    public void moveStonetoPlayerbag(Pane sourcePane, Pane targetPane) {
+        for (Node n : sourcePane.getChildren()) {
+            if (n instanceof ImageView) {
+                String s = n.getId();
+                if (s.contains("stone") || s.contains("big")) {
+                    moveStones(n, sourcePane, targetPane);
+                }
+            }
+        }
+    }
+
+    public void releaseAStone(Pane sourcePane, Pane targetPane) {
+        for (Node n : sourcePane.getChildren()) {
+            if (n instanceof ImageView) {
+                String s = n.getId();
+                if (s.contains("stone")) {
+                    moveAStone(n, sourcePane, targetPane);
+                }
+                    break; // Move only the first stone found
+            }
+        }
+    }
+
+    private void moveStones(Node n, Pane sourcePane, Pane targetPane) {
+        // Get node's current position in sourcePane
+        double fromX = n.getLayoutX();
+        double fromY = n.getLayoutY();
+
+        // Calculate the destination coordinates within the targetPane's coordinate space
+        double toX = fromX + (targetPane.getLayoutX() - sourcePane.getLayoutX());
+        double toY = fromY + (targetPane.getLayoutY() - sourcePane.getLayoutY());
+
+        System.out.println("Moving node from (" + fromX + ", " + fromY + ") to (" + toX + ", " + toY + ")");
+
+        // Create the transition
+        TranslateTransition translateTransition = new TranslateTransition(Duration.millis(100), n);
+        translateTransition.setFromX(0); // Start from node's current position
+        translateTransition.setFromY(0);
+        translateTransition.setToX(toX - fromX);
+        translateTransition.setToY(toY - fromY);
+
+        // Play the transition
+        translateTransition.play();
+
+        // On finishing the transition, move the node to targetPane
+        translateTransition.setOnFinished(event -> {
+            System.out.println("Transition finished");
+            sourcePane.getChildren().remove(n);
+            targetPane.getChildren().add(n);
+            n.setTranslateX(0); // Reset translation
+            n.setTranslateY(0);
+            n.setLayoutX(fromX); // Maintain relative position
+            n.setLayoutY(fromY); // Maintain relative position
+        });
+    }
+
+
+    private void moveAStone(Node n, Pane sourcePane, Pane targetPane) {
+        // Get node's current position in sourcePane
+        double fromX = n.getLayoutX();
+        double fromY = n.getLayoutY();
+
+        // Calculate the destination coordinates within the targetPane's coordinate space
+        double toX = fromX + (targetPane.getLayoutX() - sourcePane.getLayoutX());
+        double toY = fromY + (targetPane.getLayoutY() - sourcePane.getLayoutY());
+
+        System.out.println("Moving node from (" + fromX + ", " + fromY + ") to (" + toX + ", " + toY + ")");
+
+        // Create the transition
+        TranslateTransition translateTransition = new TranslateTransition(Duration.millis(100), n);
+        translateTransition.setFromX(0); // Start from node's current position
+        translateTransition.setFromY(0);
+        translateTransition.setToX(toX - fromX);
+        translateTransition.setToY(toY - fromY);
+
+        System.out.println("Transition finished");
+        sourcePane.getChildren().remove(n);
+        targetPane.getChildren().add(n);
+
+        // Play the transition
+        translateTransition.play();
+
+        // On finishing the transition, move the node to targetPane
+        translateTransition.setOnFinished(event -> {
+            n.setTranslateX(0); // Reset translation
+            n.setTranslateY(0);
+            n.setLayoutX(fromX); // Maintain relative position
+            n.setLayoutY(fromY); // Maintain relative position
+        });
+    }
+    public void setNumGems(Board b) {
+        CellNum00.setText("" + b.getCells()[0].getNumberOfStones());
+        CellNum01.setText("" + b.getCells()[1].getNumberOfStones());
+        CellNum02.setText("" + b.getCells()[2].getNumberOfStones());
+        CellNum03.setText("" + b.getCells()[3].getNumberOfStones());
+        CellNum04.setText("" + b.getCells()[4].getNumberOfStones());
+        CellNum06.setText("" + b.getCells()[6].getNumberOfStones());
+        CellNum07.setText("" + b.getCells()[7].getNumberOfStones());
+        CellNum08.setText("" + b.getCells()[8].getNumberOfStones());
+        CellNum09.setText("" + b.getCells()[9].getNumberOfStones());
+        CellNum10.setText("" + b.getCells()[10].getNumberOfStones());
+        bigcellNum05.setText("" + b.getCells()[5].getNumberOfStones());
+        bigcellNum11.setText("" + b.getCells()[11].getNumberOfStones());
+    }
+
     public void  changeTurn(){
         if (isP1Turn) {
             isP1Turn = false;
-            for(Pane pane : Arrays.asList(cell01, cell02, cell03, cell04, cell05)) {
+            for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
                 pane.setDisable(true);
             }
             for(Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
@@ -384,7 +499,7 @@ public class PlayScreenController implements Initializable{
             }
         }else {
             isP1Turn = true;
-            for(Pane pane : Arrays.asList(cell01, cell02, cell03, cell04, cell05)) {
+            for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
                 pane.setDisable(isPaneEmpty(pane));
             }
             for(Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
@@ -394,7 +509,7 @@ public class PlayScreenController implements Initializable{
     }
     // Method to find which pane currently stone is in
     public Pane findPane(int index){
-        for (Pane pane : Arrays.asList(cell01, cell02, cell03, cell04, cell05, cell06, cell07, cell08, cell09, cell10, quan11, quan12)){
+        for (Pane pane : Arrays.asList(cell00,cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10, bigcell05,bigcell11)){
             String id = pane.getId();
             int i = Integer.parseInt(id.substring(id.length() - 2));
             if (i == index){
@@ -403,77 +518,7 @@ public class PlayScreenController implements Initializable{
         }
         return null;
     }
-    public void moveStonetoPlayerbag(Pane sourcePane , Pane  targetPane) {
-        // Create the transition
-        for (Node n : sourcePane.getChildren()) {
-            if (n instanceof ImageView) { // Remove the case n is ImageView of the direction image
-                String s = n.getId();
-                if(s.contains("stone")){
-                            // Get node's current position in sourcePane
-                    double fromX = n.getLayoutX();
-                    double fromY = n.getLayoutY();
 
-                    // Calculate the destination coordinates within the sourcePane's coordinate space
-                    double toX = targetPane.getLayoutX() - sourcePane.getLayoutX() + targetPane.getWidth() / 2 - n.getBoundsInParent().getWidth() / 2;
-                    double toY = targetPane.getLayoutY() - sourcePane.getLayoutY() + targetPane.getHeight() / 2 - n.getBoundsInParent().getHeight() / 2;
-                    System.out.println("Moving node from (" + fromX + ", " + fromY + ") to (" + toX + ", " + toY + ")");
-                    // Create the transition
-                    TranslateTransition translateTransition = new TranslateTransition(Duration.millis(500), n);
-                    translateTransition.setFromX(0); // Start from node's current position
-                    translateTransition.setFromY(0);
-                    translateTransition.setToX(toX - fromX);
-                    translateTransition.setToY(toY - fromY);
-                    // Play the transition
-                    translateTransition.play();
-                    // On finishing the transition, move the node to targetPane
-                    translateTransition.setOnFinished(event -> {
-                        System.out.println("Transition finished");
-                        sourcePane.getChildren().remove(n);
-                        targetPane.getChildren().add(n);
-                        n.setTranslateX(0); // Reset translation
-                        n.setTranslateY(0);
-                        n.setLayoutX(targetPane.getWidth() / 2 - n.getBoundsInParent().getWidth() / 2); // Center in targetPane
-                        n.setLayoutY(targetPane.getHeight() / 2 - n.getBoundsInParent().getHeight() / 2);
-                    });
-                }
-            }
-        }
-    }
-    // Method to release stone
-    public void releaseAStone(Pane sourcePane, Pane targetPane) {
-            for (Node n : sourcePane.getChildren()) {
-                if (n instanceof ImageView) {
-                    // Get node's current position in sourcePane
-                    double fromX = n.getLayoutX();
-                    double fromY = n.getLayoutY();
-
-                    // Calculate the destination coordinates within the sourcePane's coordinate space
-                    double toX = targetPane.getLayoutX() - sourcePane.getLayoutX() + targetPane.getWidth() / 2 - n.getBoundsInParent().getWidth() / 2;
-                    double toY = targetPane.getLayoutY() - sourcePane.getLayoutY() + targetPane.getHeight() / 2 - n.getBoundsInParent().getHeight() / 2;
-
-                    System.out.println("Moving node from (" + fromX + ", " + fromY + ") to (" + toX + ", " + toY + ")");
-                    // Create the transition
-                    TranslateTransition translateTransition = new TranslateTransition(Duration.millis(500), n);
-                    translateTransition.setFromX(0); // Start from node's current position
-                    translateTransition.setFromY(0);
-                    translateTransition.setToX(toX - fromX);
-                    translateTransition.setToY(toY - fromY);
-                    // Play the transition
-                    translateTransition.play();
-                    // On finishing the transition, move the node to targetPane
-                    translateTransition.setOnFinished(event -> {
-                        System.out.println("Transition finished");
-                        sourcePane.getChildren().remove(n);
-                        targetPane.getChildren().add(n);
-                        n.setTranslateX(0); // Reset translation
-                        n.setTranslateY(0);
-                        n.setLayoutX(targetPane.getWidth() / 2 - n.getBoundsInParent().getWidth() / 2); // Center in targetPane
-                        n.setLayoutY(targetPane.getHeight() / 2 - n.getBoundsInParent().getHeight() / 2);
-                    });
-                    break; // Exit loop after moving the first ImageView
-                }
-            }
-    }
 
 
     public void playMove(){
@@ -513,12 +558,11 @@ public class PlayScreenController implements Initializable{
     public void spread() {
         // Spread stones on whose turn it is
         if (isP1Turn) {
+            releaseAStone(Player1bag, cell00);
             releaseAStone(Player1bag, cell01);
             releaseAStone(Player1bag, cell02);
             releaseAStone(Player1bag, cell03);
             releaseAStone(Player1bag, cell04);
-            releaseAStone(Player1bag, cell05);
-
         } else {
             releaseAStone(Player2bag, cell06);
             releaseAStone(Player2bag, cell07);

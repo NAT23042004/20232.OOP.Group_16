@@ -42,7 +42,7 @@ public class MainWindowController {
 
     @FXML
     public void switchtoHelpWindow(ActionEvent event) throws Exception{
-        root = FXMLLoader.load(HelpWindow.class.getResource("HelpWindow.fxml"));
+        root = FXMLLoader.load(getClass().getResource("HelpWindow.fxml"));
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
@@ -51,7 +51,7 @@ public class MainWindowController {
 
     @FXML
     public void switchtoPlayScreen(ActionEvent event) throws Exception{
-        root = FXMLLoader.load(PlayScreen.class.getResource("PlayScreen.fxml"));
+        root = FXMLLoader.load(getClass().getResource("PlayScreen.fxml"));
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);

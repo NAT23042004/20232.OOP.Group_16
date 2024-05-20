@@ -20,7 +20,7 @@ public class PlayScreen extends Application {
     @Override
     public void start(Stage stage) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PlayScreen.fxml"));
-        PlayScreenController playScreenController = new PlayScreenController(board, player1, player2);
+        PlayScreenController playScreenController = new PlayScreenController    (board, player1, player2);
         fxmlLoader.setController(playScreenController);
         Parent root = null;
         try {
