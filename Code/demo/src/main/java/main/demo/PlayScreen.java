@@ -9,8 +9,6 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
-import java.util.Objects;
-
 public class PlayScreen extends Application {
 
     private static Board board;
@@ -28,7 +26,7 @@ public class PlayScreen extends Application {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Image icon = new Image("main/demo/OIP.jpg");
+        Image icon = new Image("main/demo/icon.jpg");
         stage.getIcons().add(icon);
         stage.setResizable(false);
         Scene scene = new Scene(root);

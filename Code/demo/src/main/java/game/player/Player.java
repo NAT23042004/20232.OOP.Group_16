@@ -21,6 +21,7 @@ public class Player {
 		taken = new ArrayList<>();
 		direction = 0;
 		curIndex = -1;
+		penalty = 0;
 	}
 	
 	// Method to reset player attributes

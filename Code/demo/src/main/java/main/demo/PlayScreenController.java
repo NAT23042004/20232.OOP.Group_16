@@ -1,20 +1,26 @@
 package main.demo;
 
+import game.Game;
 import game.board.*;
 import game.player.Player;
+import game.stone.SmallStone;
 import javafx.animation.*;
-import javafx.animation.TranslateTransition;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
@@ -23,19 +29,23 @@ import javafx.stage.Stage;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
-import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
+public class PlayScreenController implements Initializable {
 
-public class PlayScreenController implements Initializable{
-
-    public final Board board;
-    private final Player player1, player2;
+    public Game game;
+    public Board board;
+    private Player player1;
+    private Player player2;
     private Player currentPlayer;
     private boolean isP1Turn;
     private boolean isWaitMove;
+    private Pane markedPane; // To mark which pane player pick up stones to move
+    private final static double DURATION_TIME = 0.5;
 
     @FXML
     private ResourceBundle resources;
@@ -51,10 +61,10 @@ public class PlayScreenController implements Initializable{
 
 
     @FXML
-    private Pane cell00,cell01,cell02,cell03,cell04;
+    private Pane cell00, cell01, cell02, cell03, cell04;
 
     @FXML
-    private Pane cell06,cell07,cell08,cell09,cell10;
+    private Pane cell06, cell07, cell08, cell09, cell10;
     @FXML
     private Pane bigcell05, bigcell11;
 
@@ -83,13 +93,13 @@ public class PlayScreenController implements Initializable{
     private ImageView rightDirectionCell00, rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04;
 
     @FXML
-    private ImageView rightDirectionCell06, rightDirectionCell07,rightDirectionCell08, rightDirectionCell09, rightDirectionCell10;
+    private ImageView rightDirectionCell06, rightDirectionCell07, rightDirectionCell08, rightDirectionCell09, rightDirectionCell10;
 
     @FXML
     private Label Player1Score, Player2Score;
 
     @FXML
-    private Label CellNum00, CellNum01, CellNum02, CellNum03, CellNum04 , CellNum06, CellNum07, CellNum08, CellNum09, CellNum10;
+    private Label CellNum00, CellNum01, CellNum02, CellNum03, CellNum04, CellNum06, CellNum07, CellNum08, CellNum09, CellNum10;
 
     @FXML
     private Label bigcellNum05, bigcellNum11;
@@ -97,9 +107,8 @@ public class PlayScreenController implements Initializable{
     private Pane Player1bag, Player2bag;
 
     @FXML
-    private ImageView big01, big02 ;
+    private ImageView big01, big02;
 
-    private File file;
     @FXML
     private Media media;
 
@@ -118,10 +127,6 @@ public class PlayScreenController implements Initializable{
     private ImageView unMute;
 
 
-
-
-
-
     public PlayScreenController(Board board, Player player1, Player player2) {
         this.board = board;
         this.player1 = player1;
@@ -130,14 +135,17 @@ public class PlayScreenController implements Initializable{
 
     @FXML
     public void switchtoMainWindow(ActionEvent event) {
+        this.mediaPlayer.stop();
+        resetPlayScreen();
         try {
-            root = FXMLLoader.load(MainWindow.class.getResource("MainWindow.fxml")); // Issue!!
+            FXMLLoader fxmlLoader = new FXMLLoader(MainWindow.class.getResource("MainWindow.fxml"));
+            fxmlLoader.setController(new MainWindowController(board, player1, player2));
+            root = fxmlLoader.load();
             stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             scene = new Scene(root);
             stage.setScene(scene);
             stage.show();
-        }
-        catch (Exception e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -145,18 +153,29 @@ public class PlayScreenController implements Initializable{
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-            isP1Turn = true;
-            isWaitMove = true;
-            for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
-                pane.setDisable(false);
+        isP1Turn = true;
+        isWaitMove = true;
+        for (Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
+            pane.setDisable(false);
+            pane.setCursor(Cursor.OPEN_HAND);
+        }
+        for (Pane pane : Arrays.asList(cell07, cell08, cell09, cell10, cell06)) {
+            pane.setDisable(true);
+            pane.setCursor(Cursor.OPEN_HAND);
+        }
+        try {
+            URL resourceUrl = getClass().getResource("/main/demo/music/gameMusic.mp3");
+            if (resourceUrl != null) {
+                this.media = new Media(resourceUrl.toURI().toString());
+                this.mediaPlayer = new MediaPlayer(media);
+                System.out.println("Music input successfully");
+            } else {
+                System.out.println("Music file not found");
             }
-            for(Pane pane : Arrays.asList(cell07, cell08, cell09, cell10, cell06)) {
-                pane.setDisable(true);
-            }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
 
-            file = new File("C:\\Users\\Admin\\Git\\LocalRepo\\20232.OOP.Group_16\\Code\\demo\\src\\main\\resources\\main\\demo\\music\\gameMusic.mp3");
-            this.media = new Media(file.toURI().toString());
-            this.mediaPlayer = new MediaPlayer(this.media);
     }
 
     @FXML
@@ -172,374 +191,458 @@ public class PlayScreenController implements Initializable{
         }
         if (this.playMusic) {
             this.mediaPlayer.play();
+            System.out.println("Music on");
         } else {
             this.mediaPlayer.stop();
+            System.out.println("Music stop");
         }
     }
+
     @FXML
     void cellChosen(MouseEvent event) {
         Pane paneChosen = (Pane) event.getPickResult().getIntersectedNode();
         ObservableList<Node> childElements = paneChosen.getChildren();
 
         String id = paneChosen.getId();
-        int index = Integer.parseInt(id.substring(id.length()-2));
+        int index = Integer.parseInt(id.substring(id.length() - 2));
         System.out.println(index);
 
 
-        for(ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
+        for (ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
                 leftDirectionCell06, leftDirectionCell07, leftDirectionCell08, leftDirectionCell09, leftDirectionCell10,
                 rightDirectionCell00, rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04,
                 rightDirectionCell06, rightDirectionCell07, rightDirectionCell08, rightDirectionCell09, rightDirectionCell10)) {
             imageView.setVisible(false);
         }
 
-        for(Button button : Arrays.asList(leftButtonCell00, leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04,
+        for (Button button : Arrays.asList(leftButtonCell00, leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04,
                 leftButtonCell06, leftButtonCell07, leftButtonCell08, leftButtonCell09, leftButtonCell10,
-                rightButtonCell00 ,rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04,
+                rightButtonCell00, rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04,
                 rightButtonCell06, rightButtonCell07, rightButtonCell08, rightButtonCell09, rightButtonCell10)) {
             button.setVisible(false);
         }
 
-        for(Node node:childElements) {
+        for (Node node : childElements) {
             node.setVisible(true);
+            if (node instanceof Button) {
+                node.setCursor(Cursor.HAND);
+            }
         }
     }
+
     @FXML
     void leftDirectionChosen(ActionEvent event) {
         Pane paneChosen = (Pane) ((Node) event.getTarget()).getParent();
         System.out.println("pane chosen: " + paneChosen);
         String id = paneChosen.getId();
-        int index = Integer.parseInt(id.substring(id.length()-2));
+        int index = Integer.parseInt(id.substring(id.length() - 2));
+        markedPane = findPane(index);
+
+        // Disable every cells and hide every direction to play movement
+        for (Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10)) {
+            pane.setDisable(true);
+        }
+
+        for (ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
+                leftDirectionCell06, leftDirectionCell07, leftDirectionCell08, leftDirectionCell09, leftDirectionCell10,
+                rightDirectionCell00, rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04,
+                rightDirectionCell06, rightDirectionCell07, rightDirectionCell08, rightDirectionCell09, rightDirectionCell10)) {
+            imageView.setVisible(false);
+        }
+
+        for (Button button : Arrays.asList(leftButtonCell00, leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04,
+                leftButtonCell06, leftButtonCell07, leftButtonCell08, leftButtonCell09, leftButtonCell10,
+                rightButtonCell00, rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04,
+                rightButtonCell06, rightButtonCell07, rightButtonCell08, rightButtonCell09, rightButtonCell10)) {
+            button.setVisible(false);
+        }
 
         // Move setup for current Player
-        if (isP1Turn){
+        if (isP1Turn) {
             this.currentPlayer = this.player1;
             currentPlayer.moveSetup(index, -1);
-        }
-        else {
+        } else {
             this.currentPlayer = this.player2;
             currentPlayer.moveSetup(index, 1);
         }
         isWaitMove = false;
 
 
-        while (!isWaitMove){
-            playMove();
-        }
 
-        if (board.gameEnd()){
-            for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10)) {
-                pane.setDisable(true);
-            }
-            // Display end game screen
-        }
-        else {
-            for(ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
-                    leftDirectionCell06, leftDirectionCell07, leftDirectionCell08, leftDirectionCell09, leftDirectionCell10,
-                    rightDirectionCell00, rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04,
-                    rightDirectionCell06, rightDirectionCell07, rightDirectionCell08, rightDirectionCell09, rightDirectionCell10)) {
-                imageView.setVisible(false);
-            }
 
-            for(Button button : Arrays.asList(leftButtonCell00, leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04,
-                    leftButtonCell06, leftButtonCell07, leftButtonCell08, leftButtonCell09, leftButtonCell10,
-                    rightButtonCell00, rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04,
-                    rightButtonCell06, rightButtonCell07, rightButtonCell08, rightButtonCell09, rightButtonCell10)) {
-                button.setVisible(false);
-            }
-            if (outOfStone()) {
-                spread();
-            }
-            changeTurn();
-        }
+        Move();
+
     }
 
     @FXML
-    void rightDirectionChosen(ActionEvent event){
+    void rightDirectionChosen(ActionEvent event) {
         Pane paneChosen = (Pane) ((Node) event.getTarget()).getParent();
         System.out.println("pane chosen: " + paneChosen);
         String id = paneChosen.getId();
-        int index = Integer.parseInt(id.substring(id.length()-2));
+        int index = Integer.parseInt(id.substring(id.length() - 2));
+        markedPane = findPane(index);
+
+        // Disable every cells and hide every direction to play movement
+        for (Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10)) {
+            pane.setDisable(true);
+        }
+
+        for (ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
+                leftDirectionCell06, leftDirectionCell07, leftDirectionCell08, leftDirectionCell09, leftDirectionCell10,
+                rightDirectionCell00, rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04,
+                rightDirectionCell06, rightDirectionCell07, rightDirectionCell08, rightDirectionCell09, rightDirectionCell10)) {
+            imageView.setVisible(false);
+        }
+
+        for (Button button : Arrays.asList(leftButtonCell00, leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04,
+                leftButtonCell06, leftButtonCell07, leftButtonCell08, leftButtonCell09, leftButtonCell10,
+                rightButtonCell00, rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04,
+                rightButtonCell06, rightButtonCell07, rightButtonCell08, rightButtonCell09, rightButtonCell10)) {
+            button.setVisible(false);
+        }
 
         // Move setup for current Player
-        if (isP1Turn){
+        if (isP1Turn) {
             this.currentPlayer = this.player1;
             currentPlayer.moveSetup(index, 1);
-        }
-        else {
+        } else {
             this.currentPlayer = this.player2;
             currentPlayer.moveSetup(index, -1);
-
         }
         isWaitMove = false;
+        Move();
 
+    }
 
-        while (!isWaitMove){
-            playMove();
+    private int curIndex;
+    private int nextIndex;
+    public  void Move(){
+        curIndex = currentPlayer.getCurIndex();
+        int direction = currentPlayer.getDirection();
+
+        markedPane = findPane(curIndex);
+        System.out.println(markedPane.getId());
+        BoardCell takenCell = board.getCells()[curIndex];
+
+        Timeline moveAnimation = new Timeline();
+
+        if (!takenCell.getStonesInCell().isEmpty()) {
+            currentPlayer.pickupStones((SmallBoardCell) takenCell);
+
+            moveAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(DURATION_TIME), (ActionEvent event1) -> {
+                curIndex = Math.floorMod(curIndex + direction, 12);
+                BoardCell cur = board.getCells()[curIndex];
+                Pane curPane = findPane(curIndex);
+                for (Node n : markedPane.getChildren()) {
+                    if (n instanceof ImageView) {
+                        String s = n.getId();
+                        if (s.contains("stone")) {
+                            System.out.println(markedPane.getId());
+                            System.out.println(curPane.getId());
+                            System.out.println("Releasing Stones...");
+
+                            markedPane.getChildren().remove(n);
+                            curPane.getChildren().add(n);
+                            currentPlayer.releaseStone(cur);
+                            resetBoard(board);
+                            break;
+                        }
+                    }
+                }
+            }));
+
+            moveAnimation.setCycleCount(currentPlayer.getInHand().size());
+        }
+        else {
+            moveAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(DURATION_TIME), (ActionEvent event1) -> {
+                curIndex = Math.floorMod(curIndex - direction, 12);
+            }));
         }
 
-        if (board.gameEnd()){
-            for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10)) {
+        moveAnimation.play();
+
+        moveAnimation.setOnFinished(event -> {
+            PauseTransition delay1 = new PauseTransition(Duration.seconds(DURATION_TIME));
+            delay1.setOnFinished(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    curIndex = Math.floorMod(curIndex + direction, 12);
+                    nextIndex = Math.floorMod(curIndex + direction, 12);
+                    try {
+                        CasesDivided();
+                    } catch (ContinueMoveException e1) {
+                        PauseTransition delay = new PauseTransition(Duration.seconds(DURATION_TIME));
+                        delay.setOnFinished(new EventHandler<ActionEvent>() {
+                            @Override
+                            public void handle(ActionEvent event) {
+                                try {
+                                    System.out.println("Continue to move");
+
+                                    Move();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                        delay.play();
+                    } catch (GetStonesandStopException e2) {
+                        PauseTransition delay = new PauseTransition(Duration.seconds(DURATION_TIME));
+                        delay.setOnFinished(new EventHandler<ActionEvent>() {
+                            @Override
+                            public void handle(ActionEvent event) {
+                                curIndex = Math.floorMod(curIndex + direction, 12);
+                                BoardCell cur = board.getCells()[curIndex];
+
+                                currentPlayer.takeStones(cur, true);
+                                resetBoard(board);
+                                setScore();
+
+                                Supplier<Pane> targetBagSupplier = () -> currentPlayer.equals(player1) ? Player1bag : Player2bag;
+                                Pane sourcePane = findPane(curIndex);
+                                Pane targetPane = targetBagSupplier.get();
+
+                                SequentialTransition collectingSequentialTransition = new SequentialTransition();
+                                for (Node n : sourcePane.getChildren()) {
+                                    if (n instanceof ImageView) {
+                                        String s = n.getId();
+                                        if (s.contains("stone") || s.contains("big")) {
+                                            System.out.println("Collecting Stones and Stop");
+                                            double fromX = n.getLayoutX();
+                                            double fromY = n.getLayoutY();
+
+                                            // Calculate the destination coordinates within the targetPane's coordinate space
+                                            double toX = fromX + (targetPane.getLayoutX() - sourcePane.getLayoutX());
+                                            double toY = fromY + (targetPane.getLayoutY() - sourcePane.getLayoutY());
+
+                                            System.out.println("Moving node from (" + fromX + ", " + fromY + ") to (" + toX + ", " + toY + ")");
+
+                                            KeyValue x = new KeyValue(n.translateXProperty(), toX - fromX, Interpolator.LINEAR);
+                                            KeyValue y = new KeyValue(n.translateYProperty(), toY - fromY, Interpolator.LINEAR);
+                                            KeyFrame frame = new KeyFrame(Duration.millis(200), x, y);
+                                            Timeline timeline = new Timeline(frame);
+
+                                            timeline.setOnFinished(e -> {
+                                                System.out.println("Transition finished");
+                                                sourcePane.getChildren().remove(n);
+                                                targetPane.getChildren().add(n);
+                                                n.setTranslateX(0);
+                                                n.setTranslateY(0);
+                                                n.setLayoutX(fromX);
+                                                n.setLayoutY(fromY);
+                                            });
+
+
+                                            collectingSequentialTransition.getChildren().add(timeline);
+                                        }
+                                    }
+                                }
+                                try {
+                                    collectingSequentialTransition.play();
+                                }
+                                catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                                currentPlayer.moveSetup(-1, 0);
+
+                                switchTurn();
+                            }
+                        });
+                        delay.play();
+                    } catch (GetStonesandContinueException e3) {
+                        PauseTransition delay = new PauseTransition(Duration.seconds(DURATION_TIME));
+                        delay.setOnFinished(new EventHandler<ActionEvent>() {
+                            @Override
+                            public void handle(ActionEvent event) {
+                                curIndex = Math.floorMod(curIndex + direction, 12);
+                                BoardCell cur = board.getCells()[curIndex];
+
+                                currentPlayer.takeStones(cur, false);
+                                resetBoard(board);
+                                setScore();
+
+                                Supplier<Pane> targetBagSupplier = () -> currentPlayer.equals(player1) ? Player1bag : Player2bag;
+                                Pane sourcePane = findPane(curIndex);
+                                Pane targetPane = targetBagSupplier.get();
+
+                                SequentialTransition collectingSequentialTransition = new SequentialTransition();
+                                for (Node n : sourcePane.getChildren()) {
+                                    if (n instanceof ImageView) {
+                                        String s = n.getId();
+                                        if (s.contains("stone") || s.contains("big")) {
+                                            System.out.println("Collecting Stones and Stop");
+                                            double fromX = n.getLayoutX();
+                                            double fromY = n.getLayoutY();
+
+                                            // Calculate the destination coordinates within the targetPane's coordinate space
+                                            double toX = fromX + (targetPane.getLayoutX() - sourcePane.getLayoutX());
+                                            double toY = fromY + (targetPane.getLayoutY() - sourcePane.getLayoutY());
+
+                                            System.out.println("Moving node from (" + fromX + ", " + fromY + ") to (" + toX + ", " + toY + ")");
+
+                                            KeyValue x = new KeyValue(n.translateXProperty(), toX - fromX, Interpolator.LINEAR);
+                                            KeyValue y = new KeyValue(n.translateYProperty(), toY - fromY, Interpolator.LINEAR);
+                                            KeyFrame frame = new KeyFrame(Duration.millis(200), x, y);
+                                            Timeline timeline = new Timeline(frame);
+
+                                            timeline.setOnFinished(e -> {
+                                                System.out.println("Transition finished");
+                                                sourcePane.getChildren().remove(n);
+                                                targetPane.getChildren().add(n);
+                                                n.setTranslateX(0);
+                                                n.setTranslateY(0);
+                                                n.setLayoutX(fromX);
+                                                n.setLayoutY(fromY);
+                                            });
+                                            collectingSequentialTransition.getChildren().add(timeline);
+                                        }
+                                    }
+                                }
+                                try {
+                                    collectingSequentialTransition.play();
+                                }
+                                catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                                Move();
+
+                            }
+                        });
+                        delay.play();
+                    } catch (StopMoveException e4) {
+                        currentPlayer.moveSetup(-1, 0);
+                        switchTurn();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+            delay1.play();
+        });
+    }
+
+    public  void CasesDivided( ) throws Exception{
+        int direction = currentPlayer.getDirection();
+
+        BoardCell cur = board.getCells()[curIndex];
+        BoardCell next = board.getCells()[nextIndex];
+        int afterIndex = Math.floorMod(curIndex + 2 * direction, 12);
+        BoardCell after = board.getCells()[afterIndex];
+        // End up at a big cell -> end turn
+        if (cur instanceof BigBoardCell){
+            throw new StopMoveException();
+        }
+        else if (cur.getNumberOfStones() > 0){
+            // End up at a small cells -> continue
+            throw new ContinueMoveException();
+        }
+        // End up at an empty cell, next cell is empty -> end turn
+        else if (cur.getNumberOfStones() == 0 && next.getNumberOfStones() == 0){
+            throw new StopMoveException();
+        }
+        // End up at an empty cell, next and after cells are not empty
+        else if (cur.getNumberOfStones() == 0 && next.getNumberOfStones() > 0 && after.getNumberOfStones() > 0){
+            throw new GetStonesandStopException();
+        }
+        // End up at an empty cell, next cell is not empty, after cell is empty
+        else if (cur.getNumberOfStones() == 0 && next.getNumberOfStones() > 0 && after.getNumberOfStones() == 0){
+            throw new GetStonesandContinueException();
+        }
+    }
+
+    public void switchTurn(){
+        if (board.gameEnd()) {
+            for (Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10)) {
                 pane.setDisable(true);
             }
             // Display end game screen
-        }
-        else {
-            for(ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
+            this.mediaPlayer.stop();
+            displayEndGameScreen();
+        } else {
+            for (ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
                     leftDirectionCell06, leftDirectionCell07, leftDirectionCell08, leftDirectionCell09, leftDirectionCell10,
                     rightDirectionCell00, rightDirectionCell01, rightDirectionCell02, rightDirectionCell03, rightDirectionCell04,
                     rightDirectionCell06, rightDirectionCell07, rightDirectionCell08, rightDirectionCell09, rightDirectionCell10)) {
                 imageView.setVisible(false);
             }
 
-            for(Button button : Arrays.asList(leftButtonCell00, leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04,
+            for (Button button : Arrays.asList(leftButtonCell00, leftButtonCell01, leftButtonCell02, leftButtonCell03, leftButtonCell04,
                     leftButtonCell06, leftButtonCell07, leftButtonCell08, leftButtonCell09, leftButtonCell10,
                     rightButtonCell00, rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04,
                     rightButtonCell06, rightButtonCell07, rightButtonCell08, rightButtonCell09, rightButtonCell10)) {
                 button.setVisible(false);
             }
-            if (outOfStone()) {
-                spread();  // Spread stones when stones are out
-            }
             changeTurn();
+
+            resetBoard(board);
+            setScore();
         }
     }
 
-    public void makeMove(Board b, Player player) {
-        int curIndex = player.getCurIndex();
-        int direction = player.getDirection();
-        // Check if currently in a turn
-        if (player.inTurn()) {
-            // Calculate next and after indexes
-            int nextIndex = Math.floorMod(curIndex + direction, 12);
-            int afterIndex = Math.floorMod(curIndex + 2 * direction, 12);
-            // Get current, next, and after cells on the board
-            BoardCell cur = b.getCells()[curIndex];
-            BoardCell next = b.getCells()[nextIndex];
-            BoardCell after = b.getCells()[afterIndex];
-            // Release one stone to the current cell
-            if (!player.getInHand().isEmpty()) {
-                Pane curPane = findPane(curIndex);
-                if (isP1Turn) {
-                    releaseAStone(Player1bag, curPane);// Visual
-                }
-                else {
-                    releaseAStone(Player2bag, curPane);// Visual
-                }
-                player.releaseStone(cur);
-            }
-            // Released all stones
-            else if (cur.getNumberOfStones() > 0) {
-                // End up at a big cell -> end turn
-                if (cur instanceof BigBoardCell) {
-                    player.moveSetup(-1, 0);
-                    setNumGems(board);
-                    setScore();
-                }
-                // End up at a small cells -> continue
-                else {
-                    Pane curPane = findPane(curIndex);
-                    if (isP1Turn) {
-                        moveStonetoPlayerbag(curPane ,Player1bag);
-                    }
-                    else {
-                        moveStonetoPlayerbag(curPane ,Player2bag);
-                    }
-                    player.pickupStones((SmallBoardCell) cur); // Pick up all stones in that cell
-                }
-            }
-            // End up at an empty cell, next and after cells are not empty
-            else if (cur.getNumberOfStones() == 0 && next.getNumberOfStones() > 0 && after.getNumberOfStones() > 0) {
-                Pane takenPane = findPane(nextIndex);
-                if (isP1Turn) {
-                    moveStonetoPlayerbag(takenPane, Player1bag);    // Visual of taking stones
-                }
-                else{
-                    moveStonetoPlayerbag(takenPane, Player2bag);    // Visual of taking stones
-                }
-                player.takeStones(next, true);// Take all stones in next cell and end turn
-                setNumGems(board);
-                setScore();
-            }
-            // End up at an empty cell, next cell is not empty, after cell is empty
-            else if (cur.getNumberOfStones() == 0 && next.getNumberOfStones() > 0 && after.getNumberOfStones() == 0) {
-                Pane takenPane = findPane(nextIndex);
-                if (isP1Turn) {
-                    moveStonetoPlayerbag(takenPane, Player1bag);    // Visual of taking stones
-                }
-                else{
-                    moveStonetoPlayerbag(takenPane, Player2bag);    // Visual of taking stones
-                }
-                player.takeStones(next, false);// Take all stones in next cell and continue
-            }
-            // End up at an empty cell, next cell is empty -> end turn
-            else if (cur.getNumberOfStones() == 0 && next.getNumberOfStones() == 0) {
-               player.moveSetup(-1, 0);
-               setNumGems(board);
-               setScore();
-            }
-        }
-
-    }
-    // Method to release a stone
-
-    public void moveStonetoPlayerbag(Pane sourcePane, Pane targetPane) {
-        for (Node n : sourcePane.getChildren()) {
-            if (n instanceof ImageView) {
-                String s = n.getId();
-                if (s.contains("stone") || s.contains("big")) {
-                    moveStones(n, sourcePane, targetPane);
-                }
-            }
-        }
+    public void resetBoard(Board b) {
+        CellNum00.setText("" + b.getCells()[0].getPoint());
+        CellNum01.setText("" + b.getCells()[1].getPoint());
+        CellNum02.setText("" + b.getCells()[2].getPoint());
+        CellNum03.setText("" + b.getCells()[3].getPoint());
+        CellNum04.setText("" + b.getCells()[4].getPoint());
+        CellNum06.setText("" + b.getCells()[6].getPoint());
+        CellNum07.setText("" + b.getCells()[7].getPoint());
+        CellNum08.setText("" + b.getCells()[8].getPoint());
+        CellNum09.setText("" + b.getCells()[9].getPoint());
+        CellNum10.setText("" + b.getCells()[10].getPoint());
+        bigcellNum05.setText("" + b.getCells()[5].getPoint());
+        bigcellNum11.setText("" + b.getCells()[11].getPoint());
     }
 
-    public void releaseAStone(Pane sourcePane, Pane targetPane) {
-        for (Node n : sourcePane.getChildren()) {
-            if (n instanceof ImageView) {
-                String s = n.getId();
-                if (s.contains("stone")) {
-                    moveAStone(n, sourcePane, targetPane);
-                }
-                    break; // Move only the first stone found
-            }
-        }
-    }
-
-    private void moveStones(Node n, Pane sourcePane, Pane targetPane) {
-        // Get node's current position in sourcePane
-        double fromX = n.getLayoutX();
-        double fromY = n.getLayoutY();
-
-        // Calculate the destination coordinates within the targetPane's coordinate space
-        double toX = fromX + (targetPane.getLayoutX() - sourcePane.getLayoutX());
-        double toY = fromY + (targetPane.getLayoutY() - sourcePane.getLayoutY());
-
-        System.out.println("Moving node from (" + fromX + ", " + fromY + ") to (" + toX + ", " + toY + ")");
-
-        // Create the transition
-        TranslateTransition translateTransition = new TranslateTransition(Duration.millis(100), n);
-        translateTransition.setFromX(0); // Start from node's current position
-        translateTransition.setFromY(0);
-        translateTransition.setToX(toX - fromX);
-        translateTransition.setToY(toY - fromY);
-
-        // Play the transition
-        translateTransition.play();
-
-        // On finishing the transition, move the node to targetPane
-        translateTransition.setOnFinished(event -> {
-            System.out.println("Transition finished");
-            sourcePane.getChildren().remove(n);
-            targetPane.getChildren().add(n);
-            n.setTranslateX(0); // Reset translation
-            n.setTranslateY(0);
-            n.setLayoutX(fromX); // Maintain relative position
-            n.setLayoutY(fromY); // Maintain relative position
-        });
-    }
-
-
-    private void moveAStone(Node n, Pane sourcePane, Pane targetPane) {
-        // Get node's current position in sourcePane
-        double fromX = n.getLayoutX();
-        double fromY = n.getLayoutY();
-
-        // Calculate the destination coordinates within the targetPane's coordinate space
-        double toX = fromX + (targetPane.getLayoutX() - sourcePane.getLayoutX());
-        double toY = fromY + (targetPane.getLayoutY() - sourcePane.getLayoutY());
-
-        System.out.println("Moving node from (" + fromX + ", " + fromY + ") to (" + toX + ", " + toY + ")");
-
-        // Create the transition
-        TranslateTransition translateTransition = new TranslateTransition(Duration.millis(100), n);
-        translateTransition.setFromX(0); // Start from node's current position
-        translateTransition.setFromY(0);
-        translateTransition.setToX(toX - fromX);
-        translateTransition.setToY(toY - fromY);
-
-        System.out.println("Transition finished");
-        sourcePane.getChildren().remove(n);
-        targetPane.getChildren().add(n);
-
-        // Play the transition
-        translateTransition.play();
-
-        // On finishing the transition, move the node to targetPane
-        translateTransition.setOnFinished(event -> {
-            n.setTranslateX(0); // Reset translation
-            n.setTranslateY(0);
-            n.setLayoutX(fromX); // Maintain relative position
-            n.setLayoutY(fromY); // Maintain relative position
-        });
-    }
-    public void setNumGems(Board b) {
-        CellNum00.setText("" + b.getCells()[0].getNumberOfStones());
-        CellNum01.setText("" + b.getCells()[1].getNumberOfStones());
-        CellNum02.setText("" + b.getCells()[2].getNumberOfStones());
-        CellNum03.setText("" + b.getCells()[3].getNumberOfStones());
-        CellNum04.setText("" + b.getCells()[4].getNumberOfStones());
-        CellNum06.setText("" + b.getCells()[6].getNumberOfStones());
-        CellNum07.setText("" + b.getCells()[7].getNumberOfStones());
-        CellNum08.setText("" + b.getCells()[8].getNumberOfStones());
-        CellNum09.setText("" + b.getCells()[9].getNumberOfStones());
-        CellNum10.setText("" + b.getCells()[10].getNumberOfStones());
-        bigcellNum05.setText("" + b.getCells()[5].getNumberOfStones());
-        bigcellNum11.setText("" + b.getCells()[11].getNumberOfStones());
-    }
-
-    public void  changeTurn(){
+    public void changeTurn() {
         if (isP1Turn) {
-            isP1Turn = false;
-            for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
+            isP1Turn = !isP1Turn;
+            // Disable cells on Player 1 when it's not Player 1's turn
+            for (Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
                 pane.setDisable(true);
             }
-            for(Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
-                pane.setDisable(isPaneEmpty(pane));
+            // Check if cells on Player 2's side are out of stone
+            if (outOfStone()) {
+                spread(); // Spread stones on current player's side when there is no more stones in the cells to play
+                for (Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
+                    pane.setDisable(false);
+                }
+            } else {
+                for (Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
+                    pane.setDisable(isPaneEmpty(pane));
+                }
             }
-        }else {
-            isP1Turn = true;
-            for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
-                pane.setDisable(isPaneEmpty(pane));
-            }
-            for(Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
+        } else {
+            isP1Turn = !isP1Turn;
+            // Disable cells on Player 2 when it's not Player 2's turn
+            for (Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
                 pane.setDisable(true);
+            }
+            // Check if cells on Player 1's side are out of stone
+            if (outOfStone()) {
+                spread(); // Spread stones on current player's side when there is no more stones in the cells to play
+                for (Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
+                    pane.setDisable(false);
+                }
+            } else {
+                for (Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
+                    pane.setDisable(isPaneEmpty(pane));
+                }
             }
         }
     }
+
     // Method to find which pane currently stone is in
-    public Pane findPane(int index){
-        for (Pane pane : Arrays.asList(cell00,cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10, bigcell05,bigcell11)){
+    public Pane findPane(int index) {
+        for (Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10, bigcell05, bigcell11)) {
             String id = pane.getId();
             int i = Integer.parseInt(id.substring(id.length() - 2));
-            if (i == index){
+            if (i == index) {
                 return pane;
             }
         }
         return null;
     }
 
-
-
-    public void playMove(){
-        if(board.gameEnd()) isWaitMove = true;
-        if (!isWaitMove) {
-            // Check whose turn it is and make a move accordingly
-            if (isP1Turn) {
-                makeMove(board, player1);
-                // Check if the turn has end after the move
-                if (!player1.inTurn()) {
-                    isWaitMove = true; // Wait for another move
-                }
-            } else {
-                makeMove(board, player2);
-                // Check if the turn has end after the move
-                if (!player2.inTurn()) {
-                    isWaitMove = true; // Wait for another move
-                }
-            }
-        }
-    }
     public boolean outOfStone() {
         int sum = 0;
         // Calculate total stones in cells based on whose turn it is
@@ -555,36 +658,178 @@ public class PlayScreenController implements Initializable{
         // Check if total stones are zero
         return (sum == 0);
     }
+
+    public void spreadAStone(Pane sourcePane, Pane targetPane){
+        for (Node n : sourcePane.getChildren()) {
+            if (n instanceof ImageView) {
+                String s = n.getId();
+                if (s.contains("stone")) {
+                    double fromX = n.getLayoutX();
+                    double fromY = n.getLayoutY();
+
+                    // Calculate the destination coordinates within the targetPane's coordinate space
+                    double toX = fromX + (targetPane.getLayoutX() - sourcePane.getLayoutX());
+                    double toY = fromY + (targetPane.getLayoutY() - sourcePane.getLayoutY());
+
+                    System.out.println("Moving node from (" + fromX + ", " + fromY + ") to (" + toX + ", " + toY + ")");
+
+                    KeyValue x = new KeyValue(n.translateXProperty(), toX - fromX, Interpolator.LINEAR);
+                    KeyValue y = new KeyValue(n.translateYProperty(), toY - fromY, Interpolator.LINEAR);
+                    KeyFrame frame = new KeyFrame(Duration.millis(200), x, y);
+                    Timeline timeline = new Timeline(frame);
+                    sourcePane.getChildren().remove(n);
+
+                    timeline.setOnFinished(e -> {
+                        System.out.println("Transition finished");
+                        targetPane.getChildren().add(n);
+                        n.setTranslateX(0);
+                        n.setTranslateY(0);
+                        n.setLayoutX(fromX);
+                        n.setLayoutY(fromY);
+                    });
+                    timeline.play();
+                    break;
+                }
+            }
+        }
+    }
     public void spread() {
         // Spread stones on whose turn it is
         if (isP1Turn) {
-            releaseAStone(Player1bag, cell00);
-            releaseAStone(Player1bag, cell01);
-            releaseAStone(Player1bag, cell02);
-            releaseAStone(Player1bag, cell03);
-            releaseAStone(Player1bag, cell04);
+            if (player1.getPoint() >= 5) {
+                for (int i = 0; i < 5; i++) {
+                    board.getCells()[i].getStonesInCell().add(new SmallStone());
+                }
+                player1.addPenalty();
+
+            } else {
+                displayEndGameScreen();
+            }
         } else {
-            releaseAStone(Player2bag, cell06);
-            releaseAStone(Player2bag, cell07);
-            releaseAStone(Player2bag, cell08);
-            releaseAStone(Player2bag, cell09);
-            releaseAStone(Player2bag, cell10);
+            if (player2.getPoint() >= 5) {
+                for (int i = 6; i < 11; i++) {
+                    board.getCells()[i].getStonesInCell().add(new SmallStone());
+                }
+                player2.addPenalty();
+            } else {
+                displayEndGameScreen();
+            }
         }
+        if (isP1Turn) {
+            spreadAStone(Player1bag, cell00);
+            spreadAStone(Player1bag, cell01);
+            spreadAStone(Player1bag, cell02);
+            spreadAStone(Player1bag, cell03);
+            spreadAStone(Player1bag, cell04);
+        }
+        else {
+            spreadAStone(Player2bag, cell06);
+            spreadAStone(Player2bag, cell07);
+            spreadAStone(Player2bag, cell08);
+            spreadAStone(Player2bag, cell09);
+            spreadAStone(Player2bag, cell10);
+
+        }
+        resetBoard(board);
+        setScore();
     }
-    public  boolean isPaneEmpty(Pane pane) {
+
+
+    public void resetPlayScreen() {
+        board = new Board();
+
+        player1 = new Player();
+        player2 = new Player();
+
+        isP1Turn = true;
+        isWaitMove = true;
+
+    }
+
+    public boolean isPaneEmpty(Pane pane) {
         boolean empty = false;
         BoardCell[] CellsOnBoard = board.getCells();
-        String id =  pane.getId();
-        int index = Integer.parseInt(id.substring(id.length()-2));
-        if (CellsOnBoard[index].getNumberOfStones() == 0){
+        String id = pane.getId();
+        int index = Integer.parseInt(id.substring(id.length() - 2));
+        if (CellsOnBoard[index].getNumberOfStones() == 0) {
             empty = true;
         }
         return empty;
     }
+
     public void setScore() {
         Player1Score.setText("" + this.player1.getPoint());
         Player2Score.setText("" + this.player2.getPoint());
     }
 
-}
+    public Label getWinner(Label winner) {
+        // Compare points of both players
+        if (this.player1.getPoint() > this.player2.getPoint()) {
+            winner.setText("1");
+            return winner; // Player 1 wins
+        } else if (this.player2.getPoint() > this.player1.getPoint()) {
+            winner.setText("2");
+            return winner; // Player 2 wins
+        } else {
+            winner.setText("1&2");
+            return winner; // It's a tie
+        }
+    }
 
+    public void displayEndGameScreen() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("EndGameScreen.fxml"));
+            Parent root = fxmlLoader.load();
+            Scene scene = new Scene(root);
+
+            EndGameScreenController controller = fxmlLoader.getController();
+            Label winnerLabel = controller.getWinnerLabel();
+            getWinner(winnerLabel);  // Set the winner in the controller
+
+            Stage endGameStage = new Stage();
+            endGameStage.setTitle("End Game Screen");
+            endGameStage.setScene(scene);
+            Image icon = new Image("main/demo/icon.jpg");
+            endGameStage.getIcons().add(icon);
+            endGameStage.setResizable(false);
+            endGameStage.show();
+
+            endGameStage.setOnCloseRequest(event -> {
+                event.consume();
+                logout(endGameStage);
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void logout(Stage stage) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Logout");
+        alert.setHeaderText("Are you sure to logout!");
+        if (alert.showAndWait().get() == ButtonType.OK) {
+            System.exit(0);
+        }
+    }
+
+
+
+
+    public static class ContinueMoveException extends Exception{
+        public ContinueMoveException() {
+        }
+    }
+    public static class GetStonesandContinueException extends Exception{
+        public GetStonesandContinueException() {
+        }
+    }
+    public static class GetStonesandStopException extends Exception{
+        public GetStonesandStopException() {
+        }
+    }
+    public static class StopMoveException extends Exception{
+        public StopMoveException() {
+        }
+    }
+
+}
