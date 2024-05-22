@@ -2,7 +2,7 @@ package main.demo;
 
 import game.board.*;
 import game.player.Player;
-import javafx.animation.*;
+import game.stone.SmallStone;
 import javafx.animation.TranslateTransition;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -13,8 +13,11 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
@@ -24,9 +27,10 @@ import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 
 public class PlayScreenController implements Initializable{
@@ -36,6 +40,8 @@ public class PlayScreenController implements Initializable{
     private Player currentPlayer;
     private boolean isP1Turn;
     private boolean isWaitMove;
+    Pane markedPane; // To mark which pane player pick up stones to move
+
 
     @FXML
     private ResourceBundle resources;
@@ -130,14 +136,16 @@ public class PlayScreenController implements Initializable{
 
     @FXML
     public void switchtoMainWindow(ActionEvent event) {
+        this.mediaPlayer.stop();
         try {
-            root = FXMLLoader.load(MainWindow.class.getResource("MainWindow.fxml")); // Issue!!
+            FXMLLoader fxmlLoader = new FXMLLoader(MainWindow.class.getResource("MainWindow.fxml"));
+            fxmlLoader.setController(new MainWindowController(board, player1, player2));
+            root = fxmlLoader.load();
             stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             scene = new Scene(root);
             stage.setScene(scene);
             stage.show();
-        }
-        catch (Exception e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -153,10 +161,18 @@ public class PlayScreenController implements Initializable{
             for(Pane pane : Arrays.asList(cell07, cell08, cell09, cell10, cell06)) {
                 pane.setDisable(true);
             }
-
-            file = new File("C:\\Users\\Admin\\Git\\LocalRepo\\20232.OOP.Group_16\\Code\\demo\\src\\main\\resources\\main\\demo\\music\\gameMusic.mp3");
-            this.media = new Media(file.toURI().toString());
-            this.mediaPlayer = new MediaPlayer(this.media);
+        try {
+            URL resourceUrl = getClass().getResource("/main/demo/music/gameMusic.mp3");
+            if (resourceUrl != null) {
+                this.media = new Media(resourceUrl.toURI().toString());
+                this.mediaPlayer = new MediaPlayer(media);
+                System.out.println("Music input successfully");
+            } else {
+                System.out.println("Music file not found");
+            }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -172,8 +188,10 @@ public class PlayScreenController implements Initializable{
         }
         if (this.playMusic) {
             this.mediaPlayer.play();
+            System.out.println("Music on");
         } else {
             this.mediaPlayer.stop();
+            System.out.println("Music stop");
         }
     }
     @FXML
@@ -210,6 +228,7 @@ public class PlayScreenController implements Initializable{
         System.out.println("pane chosen: " + paneChosen);
         String id = paneChosen.getId();
         int index = Integer.parseInt(id.substring(id.length()-2));
+        markedPane = findPane(index);
 
         // Move setup for current Player
         if (isP1Turn){
@@ -226,12 +245,17 @@ public class PlayScreenController implements Initializable{
         while (!isWaitMove){
             playMove();
         }
+        resetBoard(board);
+        setScore();
+
 
         if (board.gameEnd()){
             for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10)) {
                 pane.setDisable(true);
             }
             // Display end game screen
+            this.mediaPlayer.stop();
+            displayEndGameScreen();
         }
         else {
             for(ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
@@ -246,9 +270,6 @@ public class PlayScreenController implements Initializable{
                     rightButtonCell00, rightButtonCell01, rightButtonCell02, rightButtonCell03, rightButtonCell04,
                     rightButtonCell06, rightButtonCell07, rightButtonCell08, rightButtonCell09, rightButtonCell10)) {
                 button.setVisible(false);
-            }
-            if (outOfStone()) {
-                spread();
             }
             changeTurn();
         }
@@ -260,6 +281,7 @@ public class PlayScreenController implements Initializable{
         System.out.println("pane chosen: " + paneChosen);
         String id = paneChosen.getId();
         int index = Integer.parseInt(id.substring(id.length()-2));
+        markedPane = findPane(index);
 
         // Move setup for current Player
         if (isP1Turn){
@@ -277,12 +299,16 @@ public class PlayScreenController implements Initializable{
         while (!isWaitMove){
             playMove();
         }
+        resetBoard(board);
+        setScore();
 
         if (board.gameEnd()){
             for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04, cell06, cell07, cell08, cell09, cell10)) {
                 pane.setDisable(true);
             }
             // Display end game screen
+            this.mediaPlayer.stop();
+            displayEndGameScreen();
         }
         else {
             for(ImageView imageView : Arrays.asList(leftDirectionCell00, leftDirectionCell01, leftDirectionCell02, leftDirectionCell03, leftDirectionCell04,
@@ -298,12 +324,10 @@ public class PlayScreenController implements Initializable{
                     rightButtonCell06, rightButtonCell07, rightButtonCell08, rightButtonCell09, rightButtonCell10)) {
                 button.setVisible(false);
             }
-            if (outOfStone()) {
-                spread();  // Spread stones when stones are out
-            }
             changeTurn();
         }
     }
+
 
     public void makeMove(Board b, Player player) {
         int curIndex = player.getCurIndex();
@@ -321,10 +345,10 @@ public class PlayScreenController implements Initializable{
             if (!player.getInHand().isEmpty()) {
                 Pane curPane = findPane(curIndex);
                 if (isP1Turn) {
-                    releaseAStone(Player1bag, curPane);// Visual
+                    releaseAStone(markedPane, curPane);// Visual
                 }
                 else {
-                    releaseAStone(Player2bag, curPane);// Visual
+                    releaseAStone(markedPane, curPane);// Visual
                 }
                 player.releaseStone(cur);
             }
@@ -333,18 +357,10 @@ public class PlayScreenController implements Initializable{
                 // End up at a big cell -> end turn
                 if (cur instanceof BigBoardCell) {
                     player.moveSetup(-1, 0);
-                    setNumGems(board);
-                    setScore();
                 }
                 // End up at a small cells -> continue
                 else {
-                    Pane curPane = findPane(curIndex);
-                    if (isP1Turn) {
-                        moveStonetoPlayerbag(curPane ,Player1bag);
-                    }
-                    else {
-                        moveStonetoPlayerbag(curPane ,Player2bag);
-                    }
+                    markedPane = findPane(curIndex); // Adjust marked pane
                     player.pickupStones((SmallBoardCell) cur); // Pick up all stones in that cell
                 }
             }
@@ -352,47 +368,44 @@ public class PlayScreenController implements Initializable{
             else if (cur.getNumberOfStones() == 0 && next.getNumberOfStones() > 0 && after.getNumberOfStones() > 0) {
                 Pane takenPane = findPane(nextIndex);
                 if (isP1Turn) {
-                    moveStonetoPlayerbag(takenPane, Player1bag);    // Visual of taking stones
+                    collectStones(takenPane, Player1bag);    // Visual of collecting stones
                 }
                 else{
-                    moveStonetoPlayerbag(takenPane, Player2bag);    // Visual of taking stones
+                    collectStones(takenPane, Player2bag);    // Visual of collecting stones
                 }
                 player.takeStones(next, true);// Take all stones in next cell and end turn
-                setNumGems(board);
-                setScore();
             }
             // End up at an empty cell, next cell is not empty, after cell is empty
             else if (cur.getNumberOfStones() == 0 && next.getNumberOfStones() > 0 && after.getNumberOfStones() == 0) {
                 Pane takenPane = findPane(nextIndex);
                 if (isP1Turn) {
-                    moveStonetoPlayerbag(takenPane, Player1bag);    // Visual of taking stones
+                    collectStones(takenPane, Player1bag);    // Visual of taking stones
                 }
                 else{
-                    moveStonetoPlayerbag(takenPane, Player2bag);    // Visual of taking stones
+                    collectStones(takenPane, Player2bag);    // Visual of taking stones
                 }
                 player.takeStones(next, false);// Take all stones in next cell and continue
             }
             // End up at an empty cell, next cell is empty -> end turn
             else if (cur.getNumberOfStones() == 0 && next.getNumberOfStones() == 0) {
                player.moveSetup(-1, 0);
-               setNumGems(board);
-               setScore();
             }
         }
 
     }
-    // Method to release a stone
 
-    public void moveStonetoPlayerbag(Pane sourcePane, Pane targetPane) {
+    // Method to collect Stones
+    public void collectStones(Pane sourcePane, Pane targetPane) {
         for (Node n : sourcePane.getChildren()) {
             if (n instanceof ImageView) {
                 String s = n.getId();
                 if (s.contains("stone") || s.contains("big")) {
-                    moveStones(n, sourcePane, targetPane);
+                    moveStone(n, sourcePane, targetPane);
                 }
             }
         }
     }
+    // Method to release a stone
 
     public void releaseAStone(Pane sourcePane, Pane targetPane) {
         for (Node n : sourcePane.getChildren()) {
@@ -400,13 +413,13 @@ public class PlayScreenController implements Initializable{
                 String s = n.getId();
                 if (s.contains("stone")) {
                     moveAStone(n, sourcePane, targetPane);
-                }
                     break; // Move only the first stone found
+                }
             }
         }
     }
 
-    private void moveStones(Node n, Pane sourcePane, Pane targetPane) {
+    private void moveStone(Node n, Pane sourcePane, Pane targetPane) {
         // Get node's current position in sourcePane
         double fromX = n.getLayoutX();
         double fromY = n.getLayoutY();
@@ -473,37 +486,58 @@ public class PlayScreenController implements Initializable{
             n.setLayoutY(fromY); // Maintain relative position
         });
     }
-    public void setNumGems(Board b) {
-        CellNum00.setText("" + b.getCells()[0].getNumberOfStones());
-        CellNum01.setText("" + b.getCells()[1].getNumberOfStones());
-        CellNum02.setText("" + b.getCells()[2].getNumberOfStones());
-        CellNum03.setText("" + b.getCells()[3].getNumberOfStones());
-        CellNum04.setText("" + b.getCells()[4].getNumberOfStones());
-        CellNum06.setText("" + b.getCells()[6].getNumberOfStones());
-        CellNum07.setText("" + b.getCells()[7].getNumberOfStones());
-        CellNum08.setText("" + b.getCells()[8].getNumberOfStones());
-        CellNum09.setText("" + b.getCells()[9].getNumberOfStones());
-        CellNum10.setText("" + b.getCells()[10].getNumberOfStones());
-        bigcellNum05.setText("" + b.getCells()[5].getNumberOfStones());
-        bigcellNum11.setText("" + b.getCells()[11].getNumberOfStones());
+    public void resetBoard(Board b) {
+        CellNum00.setText("" + b.getCells()[0].getPoint());
+        CellNum01.setText("" + b.getCells()[1].getPoint());
+        CellNum02.setText("" + b.getCells()[2].getPoint());
+        CellNum03.setText("" + b.getCells()[3].getPoint());
+        CellNum04.setText("" + b.getCells()[4].getPoint());
+        CellNum06.setText("" + b.getCells()[6].getPoint());
+        CellNum07.setText("" + b.getCells()[7].getPoint());
+        CellNum08.setText("" + b.getCells()[8].getPoint());
+        CellNum09.setText("" + b.getCells()[9].getPoint());
+        CellNum10.setText("" + b.getCells()[10].getPoint());
+        bigcellNum05.setText("" + b.getCells()[5].getPoint());
+        bigcellNum11.setText("" + b.getCells()[11].getPoint());
     }
 
     public void  changeTurn(){
         if (isP1Turn) {
             isP1Turn = false;
+            // Disable cells on Player 1 when it's not Player 1's turn
             for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
                 pane.setDisable(true);
             }
-            for(Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
-                pane.setDisable(isPaneEmpty(pane));
+            // Check if cells on Player 2's side are out of stone
+            if (outOfStone()){
+                spread(); // Spread stones on current player's side when there is no more stones in the cells to play
+                for (Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
+                    pane.setDisable(false);
+                }
             }
-        }else {
+            else {
+                for (Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
+                    pane.setDisable(isPaneEmpty(pane));
+                }
+            }
+        }
+        else {
             isP1Turn = true;
-            for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
-                pane.setDisable(isPaneEmpty(pane));
-            }
-            for(Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
+            // Disable cells on Player 2 when it's not Player 2's turn
+            for (Pane pane : Arrays.asList(cell06, cell07, cell08, cell09, cell10)) {
                 pane.setDisable(true);
+            }
+            // Check if cells on Player 1's side are out of stone
+            if (outOfStone()){
+                spread(); // Spread stones on current player's side when there is no more stones in the cells to play
+                for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
+                    pane.setDisable(false);
+                }
+            }
+            else {
+                for(Pane pane : Arrays.asList(cell00, cell01, cell02, cell03, cell04)) {
+                    pane.setDisable(isPaneEmpty(pane));
+                }
             }
         }
     }
@@ -558,18 +592,32 @@ public class PlayScreenController implements Initializable{
     public void spread() {
         // Spread stones on whose turn it is
         if (isP1Turn) {
+            for (int i = 0; i < 5; i++) {
+                board.getCells()[i].getStonesInCell().add(new SmallStone());
+            }
+        }
+        else {
+            for (int i = 6; i < 11; i++) {
+                board.getCells()[i].getStonesInCell().add(new SmallStone());
+            }
+        }
+        if (isP1Turn) {
             releaseAStone(Player1bag, cell00);
             releaseAStone(Player1bag, cell01);
             releaseAStone(Player1bag, cell02);
             releaseAStone(Player1bag, cell03);
             releaseAStone(Player1bag, cell04);
-        } else {
+        }
+        else {
             releaseAStone(Player2bag, cell06);
             releaseAStone(Player2bag, cell07);
             releaseAStone(Player2bag, cell08);
             releaseAStone(Player2bag, cell09);
             releaseAStone(Player2bag, cell10);
+
         }
+
+        resetBoard(board);
     }
     public  boolean isPaneEmpty(Pane pane) {
         boolean empty = false;
@@ -585,6 +633,52 @@ public class PlayScreenController implements Initializable{
         Player1Score.setText("" + this.player1.getPoint());
         Player2Score.setText("" + this.player2.getPoint());
     }
+    public Label getWinner(Label winner) {
+        // Compare points of both players
+        if (this.player1.getPoint() > this.player2.getPoint()) {
+            winner.setText("1");
+            return winner; // Player 1 wins
+        } else if (this.player2.getPoint() > this.player1.getPoint()) {
+            winner.setText("2");
+            return winner; // Player 2 wins
+        } else {
+            winner.setText("1&2");
+            return winner; // It's a tie
+        }
+    }
+    public void displayEndGameScreen () {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("EndGameScreen.fxml"));
+            Parent root = fxmlLoader.load();
+            Scene scene = new Scene(root);
 
+            EndGameScreenController controller = fxmlLoader.getController();
+            Label winnerLabel = controller.getWinnerLabel();
+            getWinner(winnerLabel);  // Set the winner in the controller
+
+            Stage endGameStage = new Stage();
+            endGameStage.setTitle("End Game Screen");
+            endGameStage.setScene(scene);
+            Image icon = new Image("main/demo/OIP.jpg");
+            endGameStage.getIcons().add(icon);
+            endGameStage.setResizable(false);
+            endGameStage.show();
+
+            endGameStage.setOnCloseRequest(event -> {
+                event.consume();
+                logout(endGameStage);
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public void logout(Stage stage) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Logout");
+        alert.setHeaderText("Are you sure to logout!");
+        if (alert.showAndWait().get() == ButtonType.OK) {
+            stage.close();
+        }
+    }
 }
 
