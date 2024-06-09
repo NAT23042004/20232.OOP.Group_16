@@ -1,12 +1,12 @@
 package game.board;
 
-import java.util.*;
+import game.stone.Stone;
 
-import game.stone.*;
+import java.util.ArrayList;
 
 public abstract class BoardCell {
 	// Attribute declaration
-	protected ArrayList<Stone> stonesInCell = new ArrayList<Stone>(); // List to store stones in the cell
+	protected ArrayList<Stone> stonesInCell = new ArrayList<>(); // List to store stones in the cell
 
 	// Getter for stonesInCell
 	public ArrayList<Stone> getStonesInCell() {
