@@ -10,7 +10,7 @@
    <children>
       <ImageView fitHeight="504.0" fitWidth="747.0" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@b0f2b9ea-2011-4225-bf3f-4fcc312a9c6d.jpg" />
+            <Image url="@HelpWindow.jpg" />
          </image>
       </ImageView>
       <AnchorPane layoutX="7.0" layoutY="27.0" prefHeight="200.0" prefWidth="200.0" />

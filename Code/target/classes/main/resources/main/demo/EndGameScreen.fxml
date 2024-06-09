@@ -14,7 +14,7 @@
          <children>
             <ImageView fitHeight="765.0" fitWidth="1066.0" layoutX="239.0" layoutY="-90.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@440785414_1706302133231567_358189544930705520_n.png" />
+                  <Image url="@EndGameBackGround.png" />
                </image>
             </ImageView>
             <Button fx:id="ExitButton" alignment="CENTER" contentDisplay="CENTER" layoutX="537.0" layoutY="285.0" mnemonicParsing="false" onAction="#Exit" prefHeight="146.0" prefWidth="283.0" style="-fx-background-color: f;" text="Exit" textAlignment="CENTER" textFill="#cf3b3b">
@@ -22,7 +22,7 @@
                   <Font size="48.0" />
                </font>
             </Button>
-            <Label fx:id="Playerwin" alignment="CENTER" layoutX="634.0" layoutY="75.0" prefHeight="146.0" prefWidth="124.0" text="1&amp;2" textFill="#b14444">
+            <Label fx:id="Playerwin" alignment="CENTER" layoutX="629.0" layoutY="60.0" prefHeight="172.0" prefWidth="136.0" text="1&amp;2" textFill="#b14444">
                <font>
                   <Font size="50.0" />
                </font>
