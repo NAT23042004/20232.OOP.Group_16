@@ -5,7 +5,7 @@ In this project, we created an application for 2 users to play the traditional g
 2. Ngô Anh Tú - 20226005
 3. Vũ Bình Minh - 20226058
 4. Nguyễn Đức Anh - 20226009
-##Contributions
+## Contributions
 1. Đỗ Khánh Nam - 20225988 (45%)
 - Implementing and testing all of game pkg. (30%)
 - Writing report. (10%)
