@@ -1,4 +1,4 @@
-## Project Description
+# ICT.OOP.20232.Group_16
 In this project, we created an application for 2 users to play the traditional game Ô Ăn Quan.
 ## Team Members
 1. Đỗ Khánh Nam - 20225988
