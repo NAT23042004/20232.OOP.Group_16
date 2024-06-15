@@ -18,6 +18,8 @@ In this project, we created an application for 2 users to play the traditional g
 - Creating class diagram. (5%)
 ### 4. Nguyễn Đức Anh - 20226009 (5%)
 - Making presentation slide. (5%)
+## Demo Video
+https://drive.google.com/file/d/1LyEp6HFtN1XqZT0bq2ytiUTvVgbagECO/view?usp=drive_link
 
 
 
